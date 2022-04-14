@@ -25,6 +25,7 @@ import com.example.foodorder.Common.Common;
 import com.example.foodorder.Model.CommentModel;
 import com.example.foodorder.Model.FoodModel;
 import com.example.foodorder.R;
+import com.example.foodorder.ui.comments.CommentFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -71,6 +72,12 @@ public class FoodDetailFragment extends Fragment {
     void OnRatingButtonClick()
     {
         showDialogRating();
+    }
+
+    @OnClick(R.id.btnShowComment)
+    void onShowCommentButtonClick(){
+        CommentFragment commentFragment = CommentFragment.getInstance();
+        commentFragment.show(getActivity().getSupportFragmentManager(), "CommentFragment");
     }
 
     private void showDialogRating() {
