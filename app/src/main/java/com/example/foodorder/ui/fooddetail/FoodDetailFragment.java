@@ -1,6 +1,7 @@
 package com.example.foodorder.ui.fooddetail;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +9,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,8 +28,10 @@ import com.cepheuen.elegantnumberbutton.view.ElegantNumberButton;
 import com.example.foodorder.Common.Common;
 import com.example.foodorder.Model.CommentModel;
 import com.example.foodorder.Model.FoodModel;
+import com.example.foodorder.Model.SizeModel;
 import com.example.foodorder.R;
 import com.example.foodorder.ui.comments.CommentFragment;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -67,6 +73,14 @@ public class FoodDetailFragment extends Fragment {
     RatingBar ratingBar;
     @BindView(R.id.btnShowComment)
     Button btnShowComment;
+    @BindView(R.id.rdi_group_size)
+    RadioGroup rdi_group_size;
+    @BindView(R.id.img_add_on)
+    ImageView img_add_on;
+    @BindView(R.id.chip_group_user_selected_addon)
+    ChipGroup chip_group_user_selected_addon;
+    @BindView(R.id.out_of_stock)
+    TextView out_of_stock;
 
     @OnClick(R.id.btn_rating)
     void OnRatingButtonClick()
@@ -226,5 +240,49 @@ public class FoodDetailFragment extends Fragment {
                 .getSupportActionBar()
                 .setTitle(Common.selectedFood.getName());
 
+        //Size
+        for (SizeModel sizeModel: Common.selectedFood.getSize())
+        {
+            RadioButton radioButton = new RadioButton(getContext());
+            radioButton.setOnCheckedChangeListener((compoundButton, b) -> {
+                if (b)
+                    Common.selectedFood.setUserSelectedSize(sizeModel);
+                calculateTotalPrice(); //Update price
+
+            });
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1.0f);
+            radioButton.setLayoutParams(params);
+            radioButton.setText(sizeModel.getName());
+            radioButton.setTag(sizeModel.getPrice());
+            radioButton.setTextColor(Color.BLACK);//added
+
+
+            rdi_group_size.addView(radioButton);
+
+        }
+
+        if (rdi_group_size.getChildCount() > 0)
+        {
+            RadioButton radioButton = (RadioButton) rdi_group_size.getChildAt(0);
+            radioButton.setChecked(true); //Default first selected
+        }
+
+        calculateTotalPrice();
+
     }
+
+    private void calculateTotalPrice() {
+        double totalPrice = Double.parseDouble(Common.selectedFood.getPrice().toString()), displayPrice=0.0;
+        //Size
+        totalPrice += Double.parseDouble(Common.selectedFood.getUserSelectedSize().getPrice().toString());
+
+        displayPrice = totalPrice * (Integer.parseInt(number_button.getNumber()));
+        displayPrice = Math.round(displayPrice*100.0/100.0);
+
+        food_price.setText(new StringBuilder("").append(Common.formatPrice(displayPrice)).toString());
+    }
+
 }
