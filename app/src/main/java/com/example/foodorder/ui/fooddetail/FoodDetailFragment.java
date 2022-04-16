@@ -173,56 +173,56 @@ public class FoodDetailFragment extends Fragment {
         FirebaseDatabase.getInstance()
                 .getReference(Common.CATEGORY_REF)
                 .child(Common.categorySelected.getMenu_id()) //Select category
-        .child("foods") //Select array list 'foods' of this category
-        .child(Common.selectedFood.getKey()) //Becuz food item is array list so key is index of arraylist
-        .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists())
-                {
-                    FoodModel foodModel = snapshot.getValue(FoodModel.class);
-                    foodModel.setKey(Common.selectedFood.getKey());
+                .child("foods") //Select array list 'foods' of this category
+                .child(Common.selectedFood.getKey()) //Becuz food item is array list so key is index of arraylist
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(snapshot.exists())
+                        {
+                            FoodModel foodModel = snapshot.getValue(FoodModel.class);
+                            foodModel.setKey(Common.selectedFood.getKey());
 
-                    //Apply rating
-                    if (foodModel.getRatingValue() == null)
-                        foodModel.setRatingValue(0d); //d = D lower case
-                    if (foodModel.getRatingCount() == null)
-                        foodModel.setRatingCount(0l); //l = L lower case,
-                    double sumRating = (foodModel.getRatingValue() * foodModel.getRatingCount())+ratingValue;
-                    long ratingCount = foodModel.getRatingCount()+1;
-                    double result = sumRating/ratingCount;
+                            //Apply rating
+                            if (foodModel.getRatingValue() == null)
+                                foodModel.setRatingValue(0d); //d = D lower case
+                            if (foodModel.getRatingCount() == null)
+                                foodModel.setRatingCount(0l); //l = L lower case,
+                            double sumRating = (foodModel.getRatingValue() * foodModel.getRatingCount())+ratingValue;
+                            long ratingCount = foodModel.getRatingCount()+1;
+//                            double result = sumRating/ratingCount;
 
-                    Map<String,Object> updateData = new HashMap<>();
-                    updateData.put("ratingValue", result);
-                    updateData.put("ratingCount", ratingCount);
+                            Map<String,Object> updateData = new HashMap<>();
+                            updateData.put("ratingValue", sumRating);
+                            updateData.put("ratingCount", ratingCount);
 
-                    // Update data in local app vairiable
-                    foodModel.setRatingValue(result);
-                    foodModel.setRatingCount(ratingCount);
+                            // Update data in local app vairiable
+                            foodModel.setRatingValue(sumRating);
+                            foodModel.setRatingCount(ratingCount);
 
-                    snapshot.getRef()
-                            .updateChildren(updateData)
-                            .addOnCompleteListener(task -> {
-                                waitingDialog.dismiss();
-                                if(task.isSuccessful())
-                                {
-                                    Toast.makeText(getContext(), "Thank you!", Toast.LENGTH_SHORT).show();
-                                    Common.selectedFood = foodModel;
-                                    foodDetailViewModel.setFoodModel(foodModel); // Call refresh
-                                }
-                            });
-                }
-                else
-                    waitingDialog.dismiss();
-            }
+                            snapshot.getRef()
+                                    .updateChildren(updateData)
+                                    .addOnCompleteListener(task -> {
+                                        waitingDialog.dismiss();
+                                        if(task.isSuccessful())
+                                        {
+                                            Toast.makeText(getContext(), "Thank you!", Toast.LENGTH_SHORT).show();
+                                            Common.selectedFood = foodModel;
+                                            foodDetailViewModel.setFoodModel(foodModel); // Call refresh
+                                        }
+                                    });
+                        }
+                        else
+                            waitingDialog.dismiss();
+                    }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                waitingDialog.dismiss();
-                Toast.makeText(getContext(), "" + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        waitingDialog.dismiss();
+                        Toast.makeText(getContext(), "" + error.getMessage(), Toast.LENGTH_SHORT).show();
 
-            }
-        });
+                    }
+                });
     }
 
     private void displayInfo(FoodModel foodModel) {
@@ -233,7 +233,7 @@ public class FoodDetailFragment extends Fragment {
 
 
         if(foodModel.getRatingValue() != null)
-            ratingBar.setRating(foodModel.getRatingValue().floatValue());
+            ratingBar.setRating(foodModel.getRatingValue().floatValue() / foodModel.getRatingCount());
 
 
         ((AppCompatActivity)getActivity())
@@ -277,10 +277,11 @@ public class FoodDetailFragment extends Fragment {
     private void calculateTotalPrice() {
         double totalPrice = Double.parseDouble(Common.selectedFood.getPrice().toString()), displayPrice=0.0;
         //Size
-        totalPrice += Double.parseDouble(Common.selectedFood.getUserSelectedSize().getPrice().toString());
+        if(Common.selectedFood.getUserSelectedSize()!=null)
+            totalPrice += Double.parseDouble(Common.selectedFood.getUserSelectedSize().getPrice().toString());
 
         displayPrice = totalPrice * (Integer.parseInt(number_button.getNumber()));
-        displayPrice = Math.round(displayPrice*100.0/100.0);
+        displayPrice = Math.round(displayPrice * 100.0 / 100.0);
 
         food_price.setText(new StringBuilder("").append(Common.formatPrice(displayPrice)).toString());
     }

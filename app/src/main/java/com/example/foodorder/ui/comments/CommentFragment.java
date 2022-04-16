@@ -85,22 +85,22 @@ public class CommentFragment extends BottomSheetDialogFragment implements IComme
                 .orderByChild("commentTimeStamp")
                 .limitToFirst(100)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for (DataSnapshot commentSnapshot:snapshot.getChildren())
-                {
-                    CommentModel commentModel = commentSnapshot.getValue(CommentModel.class);
-                    commentModels.add(commentModel);
-                }
-                listener.onCommentLoadSuccess(commentModels);
-            }
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        for (DataSnapshot commentSnapshot:snapshot.getChildren())
+                        {
+                            CommentModel commentModel = commentSnapshot.getValue(CommentModel.class);
+                            commentModels.add(commentModel);
+                        }
+                        listener.onCommentLoadSuccess(commentModels);
+                    }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                listener.onCommentLoadFailed(error.getMessage());
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        listener.onCommentLoadFailed(error.getMessage());
 
-            }
-        });
+                    }
+                });
     }
 
     private void initViews() {

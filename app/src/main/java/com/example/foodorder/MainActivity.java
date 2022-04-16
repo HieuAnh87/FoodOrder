@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             FirebaseUser user = firebaseAuth.getCurrentUser();
             if (user != null) {
                 //Account is already logged in
-                    CheckUserFromFirebase(user);
+                CheckUserFromFirebase(user);
             } else {
                 phoneLogIn();
             }
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
                                 dialogInterface.dismiss();
 //                                goToHomeActivity(user);
                                 Toast.makeText(MainActivity.this, "Congratulation ! Register success", Toast.LENGTH_SHORT).show();
-                                 goToHomeActivity(userModel);
+                                goToHomeActivity(userModel);
 
 
                             }
@@ -184,10 +184,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void phoneLogIn() {
 
-         startActivityForResult(AuthUI.getInstance()
-                 .createSignInIntentBuilder()
-                 .setAvailableProviders(providers).build(),
-                 APP_REQUEST_CODE);
+        startActivityForResult(AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(providers).build(),
+                APP_REQUEST_CODE);
 
 
     }
