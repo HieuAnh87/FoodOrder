@@ -261,7 +261,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/brandon_medium"
                             android:textColor="#0066FF"
-                            android:text="@string/add_on"
+                            android:text= "@string/add_on"
                             android:textSize="22sp" />
 
                         <ImageView

@@ -26,6 +26,8 @@
     <string name="please_write_something">Please write something</string>
     <string name="name">Name</string>
     <string name="comment">Comment</string>
+    <string name="search">Search</string>
+    <string name="example">Example</string>
 
 
 </resources>

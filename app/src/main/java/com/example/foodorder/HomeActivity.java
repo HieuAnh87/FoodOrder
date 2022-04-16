@@ -116,10 +116,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public void onFoodItemClick(FoodItemClick event)
-    {        if(event.isSuccess())
     {
-        navController.navigate(R.id.nav_food_detail);
-    }
+        if(event.isSuccess()) {
+            navController.navigate(R.id.nav_food_detail);
+        }
     }
 
 }
