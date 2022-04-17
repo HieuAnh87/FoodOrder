@@ -46,8 +46,10 @@ public abstract class MySwipeHelper extends ItemTouchHelper.SimpleCallback {
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             for (MyButton button : buttonList)
-                if (button.onClick(e.getX(), e.getY()))
+                if (button.onClick(e.getX(), e.getY())) {
+                    swipePosition = -1;  //assigned swipePosition to -1 after click on delete button.
                     break;
+                }
 
 
             return true;
