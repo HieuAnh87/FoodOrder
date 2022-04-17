@@ -25,7 +25,7 @@ public class LocalCartDataSource implements CartDataSource {
     }
 
     @Override
-    public Single<Double> sumPriceInCart(String uid) {
+    public Single<Long> sumPriceInCart(String uid) {
         return cartDAO.sumPriceInCart(uid);
     }
 

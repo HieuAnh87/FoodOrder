@@ -21,4 +21,11 @@
 <!--            android:icon="@drawable/ic_menu_slideshow"-->
 <!--            android:title="@string/menu_food_list" />-->
     </group>
+
+    <group android:id="@+id/cart_group">
+        <item
+            android:id="@+id/nav_cart"
+            android:icon="@drawable/ic_baseline_shopping_cart_24"
+            android:title="@string/menu_cart" />
+    </group>
 </menu>
