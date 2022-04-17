@@ -1,14 +1,17 @@
 package com.example.foodorder.Database;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.PrimaryKey;
 
-@Entity(tableName = "Cart")
+@Entity(tableName = "Cart", primaryKeys ={"uid", "foodId", "foodAddon", "foodSize"})
 
 public class CartItem {
-    @PrimaryKey
+//    @NonNull
+//    @ColumnInfo(name = "categoryId")
+//    private String categoryId;
+
     @NonNull
     @ColumnInfo(name = "foodId")
     private String foodId;
@@ -31,12 +34,15 @@ public class CartItem {
     @ColumnInfo(name = "foodExtraPrice")
     private Double foodExtraPrice;
 
+    @NonNull
     @ColumnInfo(name = "foodAddon")
     private String foodAddon;
 
+    @NonNull
     @ColumnInfo(name = "foodSize")
     private String foodSize;
 
+    @NonNull
     @ColumnInfo(name = "uid")
     private String uid;
 
@@ -117,7 +123,29 @@ public class CartItem {
         return uid;
     }
 
-    public void setUid(String uid) {
+    public void setUid(String uid)  {
         this.uid = uid;
+    }
+
+//    @NonNull
+//    public String getCategoryId() {
+//        return categoryId;
+//    }
+//
+//    public void setCategoryId(@NonNull String categoryId) {
+//        this.categoryId = categoryId;
+//    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if(obj == this)
+            return true;
+        if(!(obj instanceof CartItem))
+            return false;
+        CartItem cartItem = (CartItem)obj;
+
+        return cartItem.getFoodId().equals(this.foodId) &&
+                cartItem.getFoodAddon().equals(this.foodAddon) &&
+                cartItem.getFoodSize().equals(this.foodSize);
     }
 }

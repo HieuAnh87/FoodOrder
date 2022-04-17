@@ -1,11 +1,14 @@
 package com.example.foodorder.Common;
 
+import com.example.foodorder.Model.AddonModel;
 import com.example.foodorder.Model.CategoryModel;
 import com.example.foodorder.Model.FoodModel;
+import com.example.foodorder.Model.SizeModel;
 import com.example.foodorder.Model.UserModel;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.List;
 
 public class Common {
     public static final String USER_REFERENCES = "Users";
@@ -31,6 +34,36 @@ public class Common {
         } else
         {
             return "0,00";
+        }
+    }
+
+    public static Double calculateExtraPrice(SizeModel userSelectedSize, List<AddonModel> userSelectedAddon) {
+        Double result = 0.0;
+        if(userSelectedSize == null && userSelectedAddon == null)
+            return 0.0;
+        else if(userSelectedSize == null)
+        {
+            //If User Selected Add on !=null, sum price
+            for(AddonModel addonModel: userSelectedAddon)
+            {
+                result+= addonModel.getPrice();
+            }
+            return result;
+        }
+        else if (userSelectedAddon == null)
+        {
+            return userSelectedSize.getPrice()*1.0;
+        }
+        else
+        {
+            //If both Size and Addon Selected
+            result = userSelectedSize.getPrice()*1.0;
+            for(AddonModel addonModel: userSelectedAddon)
+            {
+                result+= addonModel.getPrice();
+            }
+
+            return result;
         }
     }
 }
