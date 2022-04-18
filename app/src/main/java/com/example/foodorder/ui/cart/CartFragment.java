@@ -10,10 +10,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
@@ -42,6 +45,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.Unbinder;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -68,6 +72,63 @@ public class CartFragment extends Fragment  {
     private Unbinder unbinder;
 
     private CartViewModel cartViewModel;
+
+    @OnClick(R.id.btn_place_order)
+    void onPlaceOrderClick() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("One more step!");
+
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.layout_place_order, null);
+
+        EditText edt_address = (EditText) view.findViewById(R.id.edt_address);
+        EditText edt_comment = (EditText) view.findViewById(R.id.edt_comment);
+        TextView txt_address = (TextView) view.findViewById(R.id.txt_address_detail);
+        RadioButton rdi_home = (RadioButton) view.findViewById(R.id.rdi_home_address);
+        RadioButton rdi_other_address = (RadioButton) view.findViewById(R.id.rdi_other_address);
+        RadioButton rdi_ship_to_this = (RadioButton) view.findViewById(R.id.rdi_ship_this_address);
+        RadioButton rdi_cod = (RadioButton) view.findViewById(R.id.rdi_cod);
+
+        //Data
+        edt_address.setText(Common.currentUser.getAddress()); //By Default We select, Home Address, So Users' Address Will display
+
+        //Event
+        rdi_home.setOnCheckedChangeListener((compoundButton, b) -> {
+            edt_address.setText(Common.currentUser.getAddress());
+//            txt_address.setVisibility(View.GONE);
+//            places_fragment.setHint(Common.currentUser.getAddress());
+        });
+
+        rdi_other_address.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (b) {
+                edt_address.setText(""); //Clear
+                edt_address.setHint("Enter your address");
+                txt_address.setVisibility(View.GONE);
+            }
+        });
+
+        rdi_ship_to_this.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (b) {
+                Toast.makeText(getContext(), "Implement late with Google API!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        builder.setView(view);
+        builder.setNegativeButton("NO", (dialog, i) -> {
+            dialog.dismiss();
+        }).setPositiveButton("YES", (dialogInterface, i) -> {
+            Toast.makeText(getContext(), "Implement Late!", Toast.LENGTH_SHORT).show();
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+
+
+    }
+
+
+
 
     @SuppressLint("FragmentLiveDataObserve")
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -186,7 +247,7 @@ public class CartFragment extends Fragment  {
 
                     @Override
                     public void onSuccess(@io.reactivex.annotations.NonNull Long aLong) {
-                        txt_total_price.setText(new StringBuilder("Total: ").append(aLong));
+                        txt_total_price.setText(new StringBuilder("Total: VND").append(aLong));
 
                     }
 
@@ -302,7 +363,7 @@ public class CartFragment extends Fragment  {
 
                     @Override
                     public void onSuccess(@io.reactivex.annotations.NonNull Long aLong) {
-                        txt_total_price.setText(new StringBuilder("Total: ")
+                        txt_total_price.setText(new StringBuilder("Total: VND")
                                 .append(Common.formatPrice(aLong)));
                     }
 
