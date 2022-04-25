@@ -410,7 +410,7 @@ public class FoodDetailFragment extends Fragment implements TextWatcher {
                             updateData.put("ratingValue", sumRating);
                             updateData.put("ratingCount", ratingCount);
 
-                            // Update data in local app vairiable
+                            // Update data in local app variable
                             foodModel.setRatingValue(sumRating);
                             foodModel.setRatingCount(ratingCount);
 

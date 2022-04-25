@@ -2,7 +2,9 @@ package com.example.foodorder.ui.cart;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -36,6 +38,12 @@ import com.example.foodorder.EventBus.CounterCartEvent;
 import com.example.foodorder.EventBus.HideFABCart;
 import com.example.foodorder.EventBus.UpdateItemInCart;
 import com.example.foodorder.R;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -57,6 +65,11 @@ public class CartFragment extends Fragment  {
     private Parcelable recyclerViewState;
     private CartDataSource cartDataSource;
 
+    LocationRequest locationRequest;
+    LocationCallback locationCallback;
+    FusedLocationProviderClient fusedLocationProviderClient;
+    Location currentLocation;
+
     @BindView(R.id.recycler_cart)
     RecyclerView recycler_cart;
     @BindView(R.id.txt_total_price)
@@ -73,6 +86,7 @@ public class CartFragment extends Fragment  {
 
     private CartViewModel cartViewModel;
 
+    @SuppressLint("MissingPermission")
     @OnClick(R.id.btn_place_order)
     void onPlaceOrderClick() {
 
@@ -95,7 +109,7 @@ public class CartFragment extends Fragment  {
         //Event
         rdi_home.setOnCheckedChangeListener((compoundButton, b) -> {
             edt_address.setText(Common.currentUser.getAddress());
-//            txt_address.setVisibility(View.GONE);
+            txt_address.setVisibility(View.GONE);
 //            places_fragment.setHint(Common.currentUser.getAddress());
         });
 
@@ -109,7 +123,49 @@ public class CartFragment extends Fragment  {
 
         rdi_ship_to_this.setOnCheckedChangeListener((compoundButton, b) -> {
             if (b) {
-                Toast.makeText(getContext(), "Implement late with Google API!", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getContext(), "Implement late with Google API!", Toast.LENGTH_SHORT).show();
+                fusedLocationProviderClient.getLastLocation()
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(getContext(), "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                txt_address.setVisibility(View.GONE);
+                            }
+                        })
+                        .addOnCompleteListener(task -> {
+                            String coordinates = new StringBuilder()
+                                    .append(task.getResult().getLatitude())
+                                    .append("/")
+                                    .append(task.getResult().getLongitude()).toString();
+
+                            edt_address.setText(coordinates);
+                            txt_address.setText("Implement late with google API (Need Billing project)");
+                            txt_address.setVisibility(View.VISIBLE);
+
+
+//                            Single<String> singleAddress = Single.just(getAddressFromLatLng(task.getResult().getLatitude(),
+//                                    task.getResult().getLongitude()));
+
+//                            Disposable disposable = singleAddress.subscribeWith(new DisposableSingleObserver<String>() {
+//
+////                                @Override
+////                                public void onSuccess(String s) {
+////                                    edt_address.setText(coordinates);
+////                                    txt_address.setText(s);
+////                                    txt_address.setVisibility(View.VISIBLE);
+////                                    places_fragment.setHint(s);
+////                                }
+//
+////                                @Override
+////                                public void onError(Throwable e) {
+////                                    edt_address.setText(coordinates);
+////                                    txt_address.setText(e.getMessage());
+////                                    txt_address.setVisibility(View.VISIBLE);
+////                                }
+//                            });
+
+
+                        });
             }
         });
 
@@ -172,11 +228,37 @@ public class CartFragment extends Fragment  {
         unbinder = ButterKnife.bind(this, root);
 
         initViews();
-//        initLocation();
+        initLocation();
 
 
         return root;
 
+    }
+
+    @SuppressLint("MissingPermission")
+    private void initLocation() {
+        buildLocationRequest();
+        buildLocationCallBack();
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+
+    private void buildLocationCallBack() {
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                currentLocation = locationResult.getLastLocation();
+            }
+        };
+    }
+
+    private void buildLocationRequest() {
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(3000);
+        locationRequest.setSmallestDisplacement(10f);
     }
 
     private void initViews() {
@@ -308,14 +390,22 @@ public class CartFragment extends Fragment  {
             EventBus.getDefault().register(this);
     }
 
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (fusedLocationProviderClient != null)
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+
     @Override
     public void onStop() {
         EventBus.getDefault().postSticky(new HideFABCart(false));
         cartViewModel.onStop();
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this);
-//        if (fusedLocationProviderClient != null)
-//            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        if (fusedLocationProviderClient != null)
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
 
 //        compositeDisposable.clear();
         super.onStop();
