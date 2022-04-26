@@ -2,6 +2,8 @@ package com.example.foodorder.ui.cart;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
@@ -37,30 +39,42 @@ import com.example.foodorder.Database.LocalCartDataSource;
 import com.example.foodorder.EventBus.CounterCartEvent;
 import com.example.foodorder.EventBus.HideFABCart;
 import com.example.foodorder.EventBus.UpdateItemInCart;
+import com.example.foodorder.Model.OrderModel;
 import com.example.foodorder.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class CartFragment extends Fragment  {
+
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
+
 
     private Parcelable recyclerViewState;
     private CartDataSource cartDataSource;
@@ -138,31 +152,26 @@ public class CartFragment extends Fragment  {
                                     .append("/")
                                     .append(task.getResult().getLongitude()).toString();
 
-                            edt_address.setText(coordinates);
-                            txt_address.setText("Implement late with google API (Need Billing project)");
-                            txt_address.setVisibility(View.VISIBLE);
+                            Single<String> singleAddress = Single.just(getAddressFromLatLng(task.getResult().getLatitude(),
+                                    task.getResult().getLongitude()));
 
+                            Disposable disposable = singleAddress.subscribeWith(new DisposableSingleObserver<String>() {
 
-//                            Single<String> singleAddress = Single.just(getAddressFromLatLng(task.getResult().getLatitude(),
-//                                    task.getResult().getLongitude()));
+                                @Override
+                                public void onSuccess(String s) {
+                                    edt_address.setText(coordinates);
+                                    txt_address.setText(s);
+                                    txt_address.setVisibility(View.VISIBLE);
+//                                    places_fragment.setHint(s);
+                                }
 
-//                            Disposable disposable = singleAddress.subscribeWith(new DisposableSingleObserver<String>() {
-//
-////                                @Override
-////                                public void onSuccess(String s) {
-////                                    edt_address.setText(coordinates);
-////                                    txt_address.setText(s);
-////                                    txt_address.setVisibility(View.VISIBLE);
-////                                    places_fragment.setHint(s);
-////                                }
-//
-////                                @Override
-////                                public void onError(Throwable e) {
-////                                    edt_address.setText(coordinates);
-////                                    txt_address.setText(e.getMessage());
-////                                    txt_address.setVisibility(View.VISIBLE);
-////                                }
-//                            });
+                                @Override
+                                public void onError(Throwable e) {
+                                    edt_address.setText(coordinates);
+                                    txt_address.setText(e.getMessage());
+                                    txt_address.setVisibility(View.VISIBLE);
+                                }
+                            });
 
 
                         });
@@ -174,7 +183,11 @@ public class CartFragment extends Fragment  {
         builder.setNegativeButton("NO", (dialog, i) -> {
             dialog.dismiss();
         }).setPositiveButton("YES", (dialogInterface, i) -> {
-            Toast.makeText(getContext(), "Implement Late!", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getContext(), "Implement Late!", Toast.LENGTH_SHORT).show();
+            if (rdi_cod.isChecked())
+                paymentCOD(edt_address.getText().toString(), edt_comment.getText().toString());
+
+
         });
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -183,7 +196,146 @@ public class CartFragment extends Fragment  {
 
     }
 
+    private void paymentCOD(String address, String comment) {
+        compositeDisposable.add(cartDataSource.getAllCart(Common.currentUser.getUid())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(cartItems -> {
+                    //When We have all Cart items, We can have total Price
+                    cartDataSource.sumPriceInCart(Common.currentUser.getUid())
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(new SingleObserver<Long>() {
+                                @Override
+                                public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
 
+                                }
+
+                                @Override
+                                public void onSuccess(@io.reactivex.annotations.NonNull Long totalPrice) {
+                                    double finalPrice = totalPrice; //We will modify this formula for discount late
+                                    OrderModel order = new OrderModel();
+                                    order.setUserId(Common.currentUser.getUid());
+                                    order.setUserName(Common.currentUser.getName());
+                                    order.setUserPhone(Common.currentUser.getPhone());
+                                    order.setShippingAddress(address);
+                                    order.setComment(comment);
+
+                                    if (currentLocation != null) {
+                                        order.setLat(currentLocation.getLatitude());
+                                        order.setLng(currentLocation.getLongitude());
+                                    } else {
+                                        order.setLat(-01.f);
+                                        order.setLng(-01.f);
+                                    }
+
+                                    order.setCartItemList(cartItems);
+                                    order.setTotalPayment(totalPrice);
+                                    order.setDiscount(0); //Modify with Discount late system
+                                    order.setFinalPayment(finalPrice);
+                                    order.setCod(true);
+                                    order.setTransactionId("Cash On Delivery");
+
+                                    //Submit this order subject to Firebase
+//                                    syncLocalTimeWithGlobalTime(order);
+                                    writeOrderToFirebase(order);
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                                    if (!e.getMessage().contains("Query returned empty result set"))
+                                        Toast.makeText(getContext(), "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+
+                }, throwable -> {
+                    Toast.makeText(getContext(), "" + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                }));
+
+    }
+
+    private void writeOrderToFirebase(OrderModel order) {
+        FirebaseDatabase.getInstance()
+                .getReference(Common.ORDER_REF)
+                .child(Common.createOrderNumber()) //Create Order number with only Digit
+                .setValue(order)
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getContext(), "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                //Write Success
+                cartDataSource.cleanCart(Common.currentUser.getUid())
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new SingleObserver<Integer>() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+
+                            }
+
+                            @Override
+                            public void onSuccess(Integer integer) {
+
+//                                Map<String, String> notiData = new HashMap<>();
+//                                notiData.put(Common.NOTI_TITLE, "New Order Client");
+//                                notiData.put(Common.NOTI_CONTENT, "You have new order from " + Common.currentUser.getPhone());
+//
+//                                FCMSendData sendData =
+//                                        new FCMSendData(Common.createTopicOrder(), notiData);
+//
+//                                compositeDisposable.add(ifcmService.sendNotification(sendData)
+//                                        .subscribeOn(Schedulers.io())
+//                                        .observeOn(AndroidSchedulers.mainThread())
+//                                        .subscribe(fcmResponse -> {
+//                                            //Clean Success
+//                                            Toast.makeText(getContext(), "Order Placed Successfully", Toast.LENGTH_SHORT).show();
+////                                            EventBus.getDefault().postSticky(new CounterCartEvent(true));
+//                                        }, throwable -> {
+//                                            //Clean Success
+//                                            Toast.makeText(getContext(), "Order was sent but failure to send notification", Toast.LENGTH_SHORT).show();
+////                                            EventBus.getDefault().postSticky(new CounterCartEvent(true));
+//                                        })
+//                                );
+
+
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                Toast.makeText(getContext(), "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+            }
+        });
+    }
+
+    private String getAddressFromLatLng(double latitude, double longitude) {
+        Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
+        String result = "";
+        try {
+            List<Address> addressList = geocoder.getFromLocation(latitude, longitude, 1);
+            if (addressList != null && addressList.size() > 0) {
+                Address address = addressList.get(0); //Always get first item
+                StringBuilder sb = new StringBuilder(address.getAddressLine(0));
+                result = sb.toString();
+            } else {
+                result = "Address not found";
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            result = e.getMessage();
+        }
+
+        return result;
+    }
 
 
     @SuppressLint("FragmentLiveDataObserve")
@@ -407,7 +559,7 @@ public class CartFragment extends Fragment  {
         if (fusedLocationProviderClient != null)
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
 
-//        compositeDisposable.clear();
+        compositeDisposable.clear();
         super.onStop();
     }
 
