@@ -56,6 +56,10 @@ public class MyCategoriesAdapter extends RecyclerView.Adapter<MyCategoriesAdapte
         });
     }
 
+    public List<CategoryModel> getListCategory() {
+        return categoryModelList;
+    }
+
     @Override
     public int getItemCount() {
         return categoryModelList.size();

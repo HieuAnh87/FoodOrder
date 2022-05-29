@@ -28,10 +28,11 @@
     <string name="please_write_something">Please write something</string>
     <string name="name">Name</string>
     <string name="comment">Comment</string>
-    <string name="search">Search</string>
+    <string name="action_search">Search</string>
     <string name="example">Example</string>
     <string name="empty_cart">Empty Cart</string>
     <string name="place_order">Place Order</string>
+    <string name="menu_view_orders">View Orders</string>
     <string name="action_clear_cart">Clear Cart</string>
     <string name="sign_out">Sign out</string>
 

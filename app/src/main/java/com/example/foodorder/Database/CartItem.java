@@ -5,12 +5,12 @@ import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 
-@Entity(tableName = "Cart", primaryKeys ={"uid", "foodId", "foodAddon", "foodSize"})
+@Entity(tableName = "Cart", primaryKeys ={"uid","categoryId", "foodId", "foodAddon", "foodSize"})
 
 public class CartItem {
-//    @NonNull
-//    @ColumnInfo(name = "categoryId")
-//    private String categoryId;
+    @NonNull
+    @ColumnInfo(name = "categoryId")
+    private String categoryId;
 
     @NonNull
     @ColumnInfo(name = "foodId")
@@ -127,14 +127,14 @@ public class CartItem {
         this.uid = uid;
     }
 
-//    @NonNull
-//    public String getCategoryId() {
-//        return categoryId;
-//    }
-//
-//    public void setCategoryId(@NonNull String categoryId) {
-//        this.categoryId = categoryId;
-//    }
+    @NonNull
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(@NonNull String categoryId) {
+        this.categoryId = categoryId;
+    }
 
     @Override
     public boolean equals(@Nullable Object obj) {

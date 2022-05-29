@@ -8,6 +8,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,6 +31,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.foodorder.Adapter.MyCartAdapter;
+import com.example.foodorder.Callback.ILoadTimeFromFirebaseListener;
 import com.example.foodorder.Common.Common;
 import com.example.foodorder.Common.MySwipeHelper;
 import com.example.foodorder.Database.CartDataSource;
@@ -38,9 +40,11 @@ import com.example.foodorder.Database.CartItem;
 import com.example.foodorder.Database.LocalCartDataSource;
 import com.example.foodorder.EventBus.CounterCartEvent;
 import com.example.foodorder.EventBus.HideFABCart;
+import com.example.foodorder.EventBus.MenuItemBack;
 import com.example.foodorder.EventBus.UpdateItemInCart;
 import com.example.foodorder.Model.OrderModel;
 import com.example.foodorder.R;
+import com.example.foodorder.Remote.ICloudFunctions;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -49,13 +53,19 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -71,7 +81,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
-public class CartFragment extends Fragment  {
+public class CartFragment extends Fragment implements ILoadTimeFromFirebaseListener {
 
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
@@ -83,6 +93,10 @@ public class CartFragment extends Fragment  {
     LocationCallback locationCallback;
     FusedLocationProviderClient fusedLocationProviderClient;
     Location currentLocation;
+
+    ICloudFunctions cloudFunctions;
+    ILoadTimeFromFirebaseListener listener;
+
 
     @BindView(R.id.recycler_cart)
     RecyclerView recycler_cart;
@@ -237,8 +251,8 @@ public class CartFragment extends Fragment  {
                                     order.setTransactionId("Cash On Delivery");
 
                                     //Submit this order subject to Firebase
-//                                    syncLocalTimeWithGlobalTime(order);
-                                    writeOrderToFirebase(order);
+                                    syncLocalTimeWithGlobalTime(order);
+//                                    writeOrderToFirebase(order);
                                 }
 
                                 @Override
@@ -253,6 +267,28 @@ public class CartFragment extends Fragment  {
                     Toast.makeText(getContext(), "" + throwable.getMessage(), Toast.LENGTH_SHORT).show();
                 }));
 
+    }
+
+    private void syncLocalTimeWithGlobalTime(OrderModel order) {
+        final DatabaseReference offsetRef =
+                FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset");
+        offsetRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long offset = dataSnapshot.getValue(Long.class);
+                long estimateServerTimeMs = System.currentTimeMillis() + offset; //Offset is missing time between your local and server time.
+                SimpleDateFormat sdf = new SimpleDateFormat("MM dd,yyyy HH:mm");
+                Date resultDate = new Date(estimateServerTimeMs);
+                Log.d("TEST_DATE", "" + sdf.format(resultDate));
+
+                listener.onLoadTimeSuccess(order, estimateServerTimeMs);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                listener.onLoadTimeFailed(databaseError.getMessage());
+            }
+        });
     }
 
     private void writeOrderToFirebase(OrderModel order) {
@@ -348,6 +384,7 @@ public class CartFragment extends Fragment  {
 //        ifcmService = RetrofitFCMClient.getInstance().create(IFCMService.class);
 //
 //        listener = this;
+        listener = this;
 //
         cartViewModel.initCartDataSource(getContext());
 
@@ -623,4 +660,21 @@ public class CartFragment extends Fragment  {
                 });
     }
 
+    @Override
+    public void onLoadTimeSuccess(OrderModel order, long estimateTimeInMs) {
+        order.setCreateDate(estimateTimeInMs);
+        order.setOrderStatus(0);
+        writeOrderToFirebase(order);
+    }
+
+    @Override
+    public void onLoadTimeFailed(String message) {
+        Toast.makeText(getContext(), "" + message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDestroy() {
+        EventBus.getDefault().postSticky(new MenuItemBack());
+        super.onDestroy();
+    }
 }

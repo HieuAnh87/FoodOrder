@@ -28,6 +28,7 @@ import com.example.foodorder.EventBus.CategoryClick;
 import com.example.foodorder.EventBus.CounterCartEvent;
 import com.example.foodorder.EventBus.FoodItemClick;
 import com.example.foodorder.EventBus.HideFABCart;
+import com.example.foodorder.EventBus.MenuItemBack;
 import com.example.foodorder.EventBus.PopularCategoryClick;
 import com.example.foodorder.Model.CategoryModel;
 import com.example.foodorder.Model.FoodModel;
@@ -105,7 +106,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_menu, R.id.nav_food_detail, R.id.nav_cart, R.id.nav_food_list)
+                R.id.nav_home, R.id.nav_menu, R.id.nav_food_detail, R.id.nav_view_orders, R.id.nav_cart, R.id.nav_food_list)
                 .setDrawerLayout(drawer)
                 .build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment);
@@ -152,10 +153,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 if (menuItem.getItemId() != menuClickId)
                     navController.navigate(R.id.nav_cart);
                 break;
+            case R.id.nav_view_orders:
+                if (menuItem.getItemId() != menuClickId)
+                    navController.navigate(R.id.nav_view_orders);
+                break;
             case R.id.nav_sign_out:
                 signOut();
                 break;
         }
+        menuClickId = menuItem.getItemId();
+
         return true;
     }
 
@@ -383,6 +390,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             fab.setCount(0);
                     }
                 });
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onMenuItemBack(MenuItemBack event) {
+        menuClickId = -1;
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0)
+            getSupportFragmentManager().popBackStack();
     }
 
 }

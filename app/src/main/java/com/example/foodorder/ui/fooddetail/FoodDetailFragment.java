@@ -33,6 +33,7 @@ import com.example.foodorder.Database.CartDatabase;
 import com.example.foodorder.Database.CartItem;
 import com.example.foodorder.Database.LocalCartDataSource;
 import com.example.foodorder.EventBus.CounterCartEvent;
+import com.example.foodorder.EventBus.MenuItemBack;
 import com.example.foodorder.Model.AddonModel;
 import com.example.foodorder.Model.CommentModel;
 import com.example.foodorder.Model.FoodModel;
@@ -139,7 +140,7 @@ public class FoodDetailFragment extends Fragment implements TextWatcher {
         CartItem cartItem = new CartItem();
         cartItem.setUid(Common.currentUser.getUid());
         cartItem.setUserPhone(Common.currentUser.getPhone());
-//        cartItem.setCategoryId(Common.categorySelected.getMenu_id());
+        cartItem.setCategoryId(Common.categorySelected.getMenu_id());
         cartItem.setFoodId(Common.selectedFood.getId());
         cartItem.setFoodName(Common.selectedFood.getName());
         cartItem.setFoodImage(Common.selectedFood.getImage());
@@ -157,6 +158,7 @@ public class FoodDetailFragment extends Fragment implements TextWatcher {
             cartItem.setFoodSize("Default");
 
         cartDataSource.getItemWithAllOptionsInCart(Common.currentUser.getUid(),
+                Common.categorySelected.getMenu_id(),
                 cartItem.getFoodId(),
                 cartItem.getFoodSize(),
                 cartItem.getFoodAddon())
@@ -548,6 +550,12 @@ public class FoodDetailFragment extends Fragment implements TextWatcher {
     public void onStop() {
         compositeDisposable.clear();
         super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        EventBus.getDefault().postSticky(new MenuItemBack());
+        super.onDestroy();
     }
 
 }

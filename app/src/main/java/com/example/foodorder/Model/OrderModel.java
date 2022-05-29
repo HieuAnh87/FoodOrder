@@ -10,9 +10,9 @@ public class OrderModel {
     private boolean cod;
     private int discount;
     private List<CartItem> cartItemList;
-//    private long createDate;
-//    private String orderNumber;
-//    private int orderStatus;
+    private long createDate;
+    private String orderNumber;
+    private int orderStatus;
 
     public OrderModel() {
     }
@@ -121,27 +121,27 @@ public class OrderModel {
         this.cartItemList = cartItemList;
     }
 
-//    public long getCreateDate() {
-//        return createDate;
-//    }
-//
-//    public void setCreateDate(long createDate) {
-//        this.createDate = createDate;
-//    }
-//
-//    public String getOrderNumber() {
-//        return orderNumber;
-//    }
-//
-//    public void setOrderNumber(String orderNumber) {
-//        this.orderNumber = orderNumber;
-//    }
-//
-//    public int getOrderStatus() {
-//        return orderStatus;
-//    }
-//
-//    public void setOrderStatus(int orderStatus) {
-//        this.orderStatus = orderStatus;
-//    }
+    public long getCreateDate() {
+        return createDate;
+    }
+
+    public void setCreateDate(long createDate) {
+        this.createDate = createDate;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public int getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(int orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 }

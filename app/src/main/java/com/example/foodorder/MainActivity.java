@@ -29,6 +29,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
@@ -203,9 +205,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void goToHomeActivity(UserModel userModel) {
-        Common.currentUser = userModel; //Important, you need always assign value for it before use
-        startActivity(new Intent(MainActivity.this, HomeActivity.class));
-        finish();
+
+        FirebaseInstanceId.getInstance()
+                .getInstanceId()
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                    Common.currentUser = userModel; //Important, You always needs to assign this value before going to Home.
+                    startActivity(new Intent(MainActivity.this, HomeActivity.class));
+                    finish();
+
+                }).addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+            @Override
+            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                Common.currentUser = userModel; //Important, You always needs to assign this value before going to Home.
+                Common.updateNewToken(MainActivity.this, task.getResult().getToken());
+                startActivity(new Intent(MainActivity.this, HomeActivity.class));
+                finish();
+            }
+        });
 
     }
 

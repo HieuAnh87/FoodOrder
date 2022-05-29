@@ -39,6 +39,8 @@ public interface CartDAO {
     @Query("DELETE FROM Cart WHERE uid=:uid")
     Single<Integer> cleanCart(String uid);
 
-    @Query("SELECT * FROM Cart WHERE foodId=:foodId AND uid=:uid AND foodSize=:foodSize AND foodAddon=:foodAddon")
-    Single<CartItem> getItemWithAllOptionsInCart(String uid, String foodId, String foodSize, String foodAddon);
+    @Query("SELECT * FROM Cart WHERE categoryId=:categoryId AND foodId=:foodId AND uid=:uid AND foodSize=:foodSize AND foodAddon=:foodAddon")
+    Single<CartItem> getItemWithAllOptionsInCart(String uid,String categoryId, String foodId, String foodSize, String foodAddon);
+
+
 }
