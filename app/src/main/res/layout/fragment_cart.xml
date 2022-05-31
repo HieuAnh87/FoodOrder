@@ -16,15 +16,16 @@
 
     <TextView
         android:id="@+id/txt_empty_cart"
-        android:text="@string/empty_cart"
-        android:fontFamily="@font/brandon_medium"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:layout_centerVertical="false"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:textSize="35sp"/>
+        android:fontFamily="@font/brandon_medium"
+        android:text="@string/empty_cart"
+        android:textSize="35sp" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/group_place_holder"

@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if(dataSnapshot.exists())
                         {
-                            Toast.makeText(MainActivity.this,"You already registed", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this,"You already registered", Toast.LENGTH_SHORT).show();
 
                             UserModel userModel = dataSnapshot.getValue(UserModel.class);
 

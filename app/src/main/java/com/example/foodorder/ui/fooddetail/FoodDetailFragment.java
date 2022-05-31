@@ -131,7 +131,6 @@ public class FoodDetailFragment extends Fragment implements TextWatcher {
             displayAddOnList(); //Show All AddonOption
             addonBottomSheetDialog.show();
         }
-
     }
 
     @OnClick(R.id.btnCart)
